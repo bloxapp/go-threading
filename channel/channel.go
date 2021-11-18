@@ -48,6 +48,12 @@ func (c *Channel) FireToAll(obj interface{}) {
 	}
 }
 
+// FireOnceToAll will fire the object thorough the waiters if not cancelled, will cancel channel after
+func (c *Channel) FireOnceToAll(obj interface{}) {
+	c.FireToAll(obj)
+	c.cancelled.Set(true)
+}
+
 // CancelAll will fire nil to all waiters and will not fire any obj again
 func (c *Channel) CancelAll() {
 	c.cancelled.Set(true)
