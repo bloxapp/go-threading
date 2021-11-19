@@ -5,6 +5,8 @@ import (
 	"sync"
 )
 
+const ChannelClosed = "channel_closed"
+
 type Channel struct {
 	lock sync.RWMutex
 	registers map[string]*Waiter
@@ -44,18 +46,18 @@ func (c *Channel) FireToAll(obj interface{}) {
 	defer c.lock.RUnlock()
 
 	for _, w := range c.registers {
-		w.Fire(obj)
+		go w.Fire(obj)
 	}
 }
 
-// FireOnceToAll will fire the object thorough the waiters if not cancelled, will cancel channel after
+// FireOnceToAll will fire the object through the waiters if not cancelled, will cancel channel after
 func (c *Channel) FireOnceToAll(obj interface{}) {
 	c.FireToAll(obj)
-	c.cancelled.Set(true)
+	c.CancelAll()
 }
 
 // CancelAll will fire nil to all waiters and will not fire any obj again
 func (c *Channel) CancelAll() {
 	c.cancelled.Set(true)
-	c.FireToAll(nil)
+	c.FireToAll(ChannelClosed)
 }

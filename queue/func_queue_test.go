@@ -8,7 +8,7 @@ import (
 func TestQueue(t *testing.T) {
 
 	t.Run("add one", func(t *testing.T) {
-		q := New()
+		q := New(1000)
 
 		require.Nil(t, q.Pop())
 		require.True(t, q.Add(func() {}))
@@ -17,7 +17,7 @@ func TestQueue(t *testing.T) {
 	})
 
 	t.Run("add multiple", func(t *testing.T) {
-		q := New()
+		q := New(1000)
 
 		require.True(t, q.Add(func() {}))
 		require.True(t, q.Add(func() {}))
@@ -33,7 +33,7 @@ func TestQueue(t *testing.T) {
 	})
 
 	t.Run("clear and stop", func(t *testing.T) {
-		q := New()
+		q := New(1000)
 
 		require.True(t, q.Add(func() {}))
 		q.ClearAndStop()

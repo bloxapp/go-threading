@@ -1,40 +1,40 @@
 package queue
 
-import (
-	"sync"
-)
+import "sync"
 
-// Item represent some function
-type Item struct {
-	F func()
-	Cancel func()
-}
-
-// ItemQueue is the interface for managing a queue of functions
-type ItemQueue interface {
-	Add(*Item) bool
-	Pop() *Item
+// Queue is the interface for managing a queue of items
+type Queue interface {
+	Add(interface{}) bool
+	Pop() interface{}
+	All() []interface{}
+	Len() int
 	ClearAndStop()
 }
 
-// queue thread safe implementation of ItemQueue
+// queue thread safe implementation of Queue
 type queue struct {
 	stop  bool
-	queue []*Item
-	lock  sync.Mutex
+	queue []interface{}
+	lock  sync.RWMutex
+	capacity int
 }
 
-// New returns a new instance of queue
-func New() ItemQueue {
+// New returns a new instance of funcQueue
+func New(capacity int) Queue {
 	q := queue{
-		queue: make([]*Item, 0),
-		lock:  sync.Mutex{},
+		queue: make([]interface{}, 0),
+		lock:  sync.RWMutex{},
+		capacity: capacity,
 	}
 	return &q
 }
 
-// Add will add an an item to the queue, thread safe.
-func (q *queue) Add(e *Item) bool {
+// Add will add an item to the queue, thread safe.
+func (q *queue) Add(e interface{}) bool {
+	if q.Len() >= q.capacity {
+		return false
+	}
+
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -46,8 +46,10 @@ func (q *queue) Add(e *Item) bool {
 	return true
 }
 
-// Pop will return and delete an an item from the queue, thread safe.
-func (q *queue) Pop() *Item {
+// Pop will return and delete an an item from the funcQueue, thread safe.
+func (q *queue) Pop() interface{} {
+	qLen := q.Len() // called before lock as it's a locking call as well
+
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -55,7 +57,7 @@ func (q *queue) Pop() *Item {
 		return nil
 	}
 
-	if len(q.queue) > 0 {
+	if qLen > 0 {
 		ret := q.queue[0]
 		q.queue = q.queue[1:len(q.queue)]
 		return ret
@@ -63,14 +65,22 @@ func (q *queue) Pop() *Item {
 	return nil
 }
 
-// ClearAndStop will clear the queue disable adding more items to it, thread safe.
+func (q *queue) All() []interface{} {
+	q.lock.RLock()
+	defer q.lock.RUnlock()
+	return q.queue
+}
+
+func (q *queue) Len() int {
+	return len(q.All())
+}
+
+// ClearAndStop will clear the funcQueue disable adding more items to it, thread safe.
 func (q *queue) ClearAndStop() {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
 	q.stop = true
-	for _, item := range q.queue {
-		item.Cancel()
-	}
-	q.queue = make([]*Item, 0)
+	q.queue = make([]interface{}, 0)
 }
+
