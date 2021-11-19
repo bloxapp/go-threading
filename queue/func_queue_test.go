@@ -1,14 +1,15 @@
 package queue
 
 import (
-	"github.com/stretchr/testify/require"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestQueue(t *testing.T) {
 
 	t.Run("add one", func(t *testing.T) {
-		q := New(1000)
+		q := New(FIFO, 1000)
 
 		require.Nil(t, q.Pop())
 		require.True(t, q.Add(func() {}))
@@ -17,7 +18,7 @@ func TestQueue(t *testing.T) {
 	})
 
 	t.Run("add multiple", func(t *testing.T) {
-		q := New(1000)
+		q := New(FIFO, 1000)
 
 		require.True(t, q.Add(func() {}))
 		require.True(t, q.Add(func() {}))
@@ -33,7 +34,7 @@ func TestQueue(t *testing.T) {
 	})
 
 	t.Run("clear and stop", func(t *testing.T) {
-		q := New(1000)
+		q := New(FIFO, 1000)
 
 		require.True(t, q.Add(func() {}))
 		q.ClearAndStop()

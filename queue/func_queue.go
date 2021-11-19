@@ -13,7 +13,7 @@ type FuncQueue interface {
 
 // Item represent some function
 type Item struct {
-	F func()
+	F      func()
 	Cancel func()
 }
 
@@ -27,7 +27,7 @@ type funcQueue struct {
 // NewFuncQueue returns a new instance of funcQueue
 func NewFuncQueue(capacity int) FuncQueue {
 	q := funcQueue{
-		queue: New(capacity),
+		queue: New(FIFO, capacity),
 		lock:  sync.Mutex{},
 	}
 	return &q

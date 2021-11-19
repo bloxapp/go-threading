@@ -11,20 +11,29 @@ type Queue interface {
 	ClearAndStop()
 }
 
+type QueueDirection string
+
+const (
+	FIFO QueueDirection = "FIFO"
+	LIFO QueueDirection = "LIFO"
+)
+
 // queue thread safe implementation of Queue
 type queue struct {
-	stop  bool
-	queue []interface{}
-	lock  sync.RWMutex
-	capacity int
+	stop      bool
+	queue     []interface{}
+	lock      sync.RWMutex
+	capacity  int
+	direction QueueDirection
 }
 
 // New returns a new instance of funcQueue
-func New(capacity int) Queue {
+func New(direction QueueDirection, capacity int) Queue {
 	q := queue{
-		queue: make([]interface{}, 0),
-		lock:  sync.RWMutex{},
-		capacity: capacity,
+		queue:     make([]interface{}, 0),
+		lock:      sync.RWMutex{},
+		capacity:  capacity,
+		direction: direction,
 	}
 	return &q
 }
@@ -58,9 +67,16 @@ func (q *queue) Pop() interface{} {
 	}
 
 	if qLen > 0 {
-		ret := q.queue[0]
-		q.queue = q.queue[1:len(q.queue)]
-		return ret
+		if q.direction == FIFO {
+			ret := q.queue[0]
+			q.queue = q.queue[1:qLen]
+			return ret
+		} else { // LIFO
+			ret := q.queue[qLen-1]
+			q.queue = q.queue[0 : qLen-1]
+			return ret
+		}
+
 	}
 	return nil
 }
@@ -83,4 +99,3 @@ func (q *queue) ClearAndStop() {
 	q.stop = true
 	q.queue = make([]interface{}, 0)
 }
-

@@ -2,31 +2,32 @@ package channel
 
 import (
 	"context"
-	"github.com/google/uuid"
-	"github.com/pkg/errors"
 	"go-threading/queue"
 	"go-threading/threadsafe"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	"github.com/pkg/errors"
 )
 
 const QueueSize = 5
 
 type Waiter struct {
-	id string
-	c chan interface{}
-	lock sync.Mutex
+	id         string
+	c          chan interface{}
+	lock       sync.Mutex
 	waitCalled *threadsafe.SafeBool
-	queue queue.Queue
+	queue      queue.Queue
 }
 
 func NewWaiter() *Waiter {
 	return &Waiter{
-		id: uuid.New().String(),
-		c: make(chan interface{}),
-		lock: sync.Mutex{},
+		id:         uuid.New().String(),
+		c:          make(chan interface{}),
+		lock:       sync.Mutex{},
 		waitCalled: threadsafe.Bool(),
-		queue: queue.New(QueueSize),
+		queue:      queue.New(queue.FIFO, QueueSize),
 	}
 }
 
@@ -42,13 +43,13 @@ func (w *Waiter) Wait() interface{} {
 	}
 
 	// no queue, wait
-	obj := <- w.c
+	obj := <-w.c
 	return obj
 }
 
 // WaitWithTimeout will return a fired object or an error if deadline exceeded
 func (w *Waiter) WaitWithTimeout(duration time.Duration) interface{} {
-	c, _ := context.WithTimeout(context.Background(),duration)
+	c, _ := context.WithTimeout(context.Background(), duration)
 	return w.WaitWithContext(c)
 }
 
@@ -61,7 +62,7 @@ func (w *Waiter) WaitWithContext(ctx context.Context) interface{} {
 	select {
 	case <-ctx.Done():
 		ret = errors.New("")
-	case obj := <- w.c:
+	case obj := <-w.c:
 		ret = obj
 	}
 
