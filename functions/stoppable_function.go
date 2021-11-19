@@ -1,51 +1,51 @@
 package functions
 
 import (
-	"github.com/pkg/errors"
 	"go-threading/channel"
+
+	"github.com/pkg/errors"
 )
 
 // FuncWithStop is the interface of functions to trigger. Returns an optional object, error and bool (true if finished execution, false if stopped)
 type FuncWithStop = func(stopper FuncManager) (interface{}, error, bool)
 
 type FuncResult struct {
-	Obj interface{}
-	Err error
+	Obj       interface{}
+	Err       error
 	Completed bool
 }
 
 type StoppableFunc struct {
-	fn FuncWithStop
+	fn      FuncWithStop
 	Manager FuncManager
-	Result *channel.Channel
+	Result  *channel.Channel
 }
 
 // NewStoppableF will run a provided function in a new go routine with a funcManager and a results channel which returns FuncResult
 func NewStoppableF(fn FuncWithStop) *StoppableFunc {
 	return &StoppableFunc{
-		fn: fn,
+		fn:      fn,
 		Manager: newFuncManager(),
-		Result: channel.New(),
+		Result:  channel.New(),
 	}
 }
-
 
 func (s *StoppableFunc) Start() *FuncResult {
 	w := s.Result.Register()
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
-				s.Result.FireOnceToAll(&FuncResult{
-					Err: errors.Errorf("panic: %s", err),
+				s.Result.FireToAll(&FuncResult{
+					Err:       errors.Errorf("panic: %s", err),
 					Completed: false,
 				})
 			}
 		}()
 
 		res, err, completed := s.fn(s.Manager)
-		s.Result.FireOnceToAll(&FuncResult{
-			Obj: res,
-			Err: err,
+		s.Result.FireToAll(&FuncResult{
+			Obj:       res,
+			Err:       err,
 			Completed: completed,
 		})
 	}()

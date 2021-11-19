@@ -2,17 +2,18 @@ package channel
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/require"
 	"go-threading/threadsafe"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestChannel_RegisterAndFire(t *testing.T) {
 	c := New()
 
-	fired := make([]*threadsafe.SafeBool,0)
-	for i := 0 ; i < 100 ; i++ {
+	fired := make([]*threadsafe.SafeBool, 0)
+	for i := 0; i < 100; i++ {
 		w := c.Register()
 		firedBool := threadsafe.Bool()
 		fired = append(fired, firedBool)
@@ -22,9 +23,9 @@ func TestChannel_RegisterAndFire(t *testing.T) {
 		}(w, firedBool)
 	}
 
-	time.Sleep(time.Millisecond*25)
+	time.Sleep(time.Millisecond * 25)
 	c.FireToAll(true)
-	
+
 	// verify
 	for i, b := range fired {
 		t.Run(fmt.Sprintf("waiter: %d", i), func(t *testing.T) {
@@ -36,8 +37,8 @@ func TestChannel_RegisterAndFire(t *testing.T) {
 func TestChannel_DeRegister(t *testing.T) {
 	c := New()
 
-	waiters := make([]*Waiter,0)
-	for i := 0 ; i < 100 ; i++ {
+	waiters := make([]*Waiter, 0)
+	for i := 0; i < 100; i++ {
 		waiters = append(waiters, c.Register())
 	}
 
@@ -45,14 +46,14 @@ func TestChannel_DeRegister(t *testing.T) {
 	for _, w := range waiters {
 		c.DeRegister(w)
 	}
-	require.Len(t, c.registers,0)
+	require.Len(t, c.registers, 0)
 }
 
 func TestChannel_FireOnceToAll(t *testing.T) {
 	c := New()
 
-	fired := make([]*threadsafe.AnyObj,0)
-	for i := 0 ; i < 100 ; i++ {
+	fired := make([]*threadsafe.AnyObj, 0)
+	for i := 0; i < 100; i++ {
 		w := c.Register()
 		firedObj := threadsafe.Any()
 		fired = append(fired, firedObj)
@@ -63,10 +64,9 @@ func TestChannel_FireOnceToAll(t *testing.T) {
 			firedObj.Set(obj)
 		}(w, firedObj)
 	}
-
-	time.Sleep(time.Millisecond*50)
+	time.Sleep(time.Millisecond * 100)
 	c.FireOnceToAll(true)
-	time.Sleep(time.Millisecond*100)
+	time.Sleep(time.Millisecond * 100)
 
 	// verify
 	for i, b := range fired {

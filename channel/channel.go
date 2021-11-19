@@ -8,14 +8,14 @@ import (
 const ChannelClosed = "channel_closed"
 
 type Channel struct {
-	lock sync.RWMutex
+	lock      sync.RWMutex
 	registers map[string]*Waiter
 	cancelled *threadsafe.SafeBool
 }
 
 func New() *Channel {
 	return &Channel{
-		lock: sync.RWMutex{},
+		lock:      sync.RWMutex{},
 		registers: make(map[string]*Waiter),
 		cancelled: threadsafe.Bool(),
 	}
@@ -46,7 +46,7 @@ func (c *Channel) FireToAll(obj interface{}) {
 	defer c.lock.RUnlock()
 
 	for _, w := range c.registers {
-		go w.Fire(obj)
+		w.Fire(obj)
 	}
 }
 
