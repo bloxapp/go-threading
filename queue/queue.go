@@ -2,6 +2,7 @@ package queue
 
 import (
 	"go-threading/channel"
+	policies2 "go-threading/queue/policies"
 	"sync"
 	"time"
 )
@@ -34,17 +35,17 @@ const (
 // queue thread safe implementation of Queue
 type queue struct {
 	stop      bool
-	queue     []Policy
-	policies  []ApplyPolicy
+	queue     []policies2.PolicyManager
+	policies  []policies2.ApplyPolicy
 	lock      sync.RWMutex
 	capacity  int
 	direction Direction
 }
 
 // New returns a new instance of funcQueue
-func New(direction Direction, capacity int, policies ...ApplyPolicy) Queue {
+func New(direction Direction, capacity int, policies ...policies2.ApplyPolicy) Queue {
 	q := queue{
-		queue:     make([]Policy, 0),
+		queue:     make([]policies2.PolicyManager, 0),
 		lock:      sync.RWMutex{},
 		capacity:  capacity,
 		direction: direction,
@@ -66,12 +67,12 @@ func (q *queue) Add(e interface{}) bool {
 		return false
 	}
 
-	policies := make([]Policy, 0)
+	policies := make([]policies2.Policy, 0)
 	for _, p := range q.policies {
 		policies = append(policies, p())
 	}
 
-	q.queue = append(q.queue, NewPolicyManager(e, policies))
+	q.queue = append(q.queue, policies2.NewPolicyManager(e, policies))
 	return true
 }
 
@@ -139,5 +140,5 @@ func (q *queue) ClearAndStop() {
 	defer q.lock.Unlock()
 
 	q.stop = true
-	q.queue = make([]Policy, 0)
+	q.queue = make([]policies2.PolicyManager, 0)
 }

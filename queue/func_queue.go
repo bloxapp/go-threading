@@ -1,6 +1,7 @@
 package queue
 
 import (
+	"go-threading/queue/policies"
 	"sync"
 )
 
@@ -47,7 +48,7 @@ func (q *funcQueue) Pop() *Item {
 // ClearAndStop will clear the funcQueue disable adding more items to it, thread safe.
 func (q *funcQueue) ClearAndStop() {
 	for _, item := range q.queue.(*queue).queue {
-		item.(Policy).Item().(*Item).Cancel()
+		item.(policies.Policy).Item().(*Item).Cancel()
 	}
 	q.queue.ClearAndStop()
 }
