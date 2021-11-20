@@ -46,8 +46,8 @@ func (q *funcQueue) Pop() *Item {
 
 // ClearAndStop will clear the funcQueue disable adding more items to it, thread safe.
 func (q *funcQueue) ClearAndStop() {
-	for _, item := range q.queue.All() {
-		item.(*Item).Cancel()
+	for _, item := range q.queue.(*queue).queue {
+		item.(Policy).Item().(*Item).Cancel()
 	}
 	q.queue.ClearAndStop()
 }

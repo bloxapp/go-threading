@@ -7,6 +7,11 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+func TestEmptyQueue(t *testing.T) {
+	q := New(FIFO, 10)
+	require.Nil(t, q.Pop())
+}
+
 func TestQueueDirection(t *testing.T) {
 	t.Run("fifo", func(t *testing.T) {
 		q := New(FIFO, 10)
