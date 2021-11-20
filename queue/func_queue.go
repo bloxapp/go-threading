@@ -1,15 +1,13 @@
 package queue
 
 import (
-	"go-threading/queue/policies"
 	"sync"
 )
 
 // FuncQueue is the interface for managing a queue of Items
 type FuncQueue interface {
-	Add(item *Item) bool
-	Pop() *Item
-	ClearAndStop()
+	Add(item *Item, indexes ...Index) bool
+	Pop(index Index) *Item
 }
 
 // Item represent some function
@@ -35,20 +33,12 @@ func NewFuncQueue(capacity int) FuncQueue {
 }
 
 // Add will add an an item to the funcQueue, thread safe.
-func (q *funcQueue) Add(e *Item) bool {
-	return q.queue.Add(e)
+func (q *funcQueue) Add(e *Item, indexes ...Index) bool {
+	return q.queue.Add(e, indexes...)
 }
 
 // Pop will return and delete an an item from the funcQueue, thread safe.
-func (q *funcQueue) Pop() *Item {
-	ret, _ := q.queue.Pop().(*Item)
+func (q *funcQueue) Pop(index Index) *Item {
+	ret, _ := q.queue.Pop(index).(*Item)
 	return ret
-}
-
-// ClearAndStop will clear the funcQueue disable adding more items to it, thread safe.
-func (q *funcQueue) ClearAndStop() {
-	for _, item := range q.queue.(*queue).queue {
-		item.(policies.Policy).Item().(*Item).Cancel()
-	}
-	q.queue.ClearAndStop()
 }
