@@ -1,13 +1,28 @@
 package queue
 
-import "sync"
+import (
+	"go-threading/channel"
+	"sync"
+	"time"
+)
+
+const (
+	PullSleepTime = time.Millisecond * 50
+)
 
 // Queue is the interface for managing a queue of items
 type Queue interface {
+	// Add will add an item to the queue
 	Add(interface{}) bool
+	// Pop will return the next item or nil
 	Pop() interface{}
+	// PopWait returns a waiter which can be used to pop or wait for a new object and then pop
+	PopWait() *channel.Waiter
+	// All returns all queue items
 	All() []interface{}
+	// Len will return the number of items in the queue
 	Len() int
+	// ClearAndStop will clear the queue and stop it from adding more items
 	ClearAndStop()
 }
 
@@ -79,6 +94,21 @@ func (q *queue) Pop() interface{} {
 
 	}
 	return nil
+}
+
+func (q *queue) PopWait() *channel.Waiter {
+	c := channel.New()
+	go func() {
+	loop:
+		for {
+			if obj := q.Pop(); obj != nil {
+				c.FireToAll(obj)
+				break loop
+			}
+			time.Sleep(PullSleepTime)
+		}
+	}()
+	return c.Register()
 }
 
 func (q *queue) All() []interface{} {

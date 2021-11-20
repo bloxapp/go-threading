@@ -2,10 +2,11 @@ package channel
 
 import (
 	"context"
-	"github.com/stretchr/testify/require"
 	"go-threading/threadsafe"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/require"
 )
 
 func TestWaiterNormal(t *testing.T) {
@@ -17,9 +18,9 @@ func TestWaiterNormal(t *testing.T) {
 		res.Set(newVal.(bool))
 	}(res)
 
-	time.Sleep(time.Millisecond*10)
+	time.Sleep(time.Millisecond * 10)
 	w.Fire(true)
-	time.Sleep(time.Millisecond*10)
+	time.Sleep(time.Millisecond * 10)
 	require.True(t, res.Get())
 }
 
@@ -33,12 +34,12 @@ func TestWaiterQueue(t *testing.T) {
 
 	cnt := 0
 	for {
-		cnt ++
+		cnt++
 		if w.Wait() == nil {
 			break
 		}
 	}
-	require.EqualValues(t, QueueSize,cnt)
+	require.EqualValues(t, QueueSize, cnt)
 }
 
 func TestWaiterWithTimeout(t *testing.T) {
@@ -54,7 +55,7 @@ func TestWaiterWithTimeout(t *testing.T) {
 		fired.Set(true)
 	}(res)
 
-	time.Sleep(time.Millisecond*60)
+	time.Sleep(time.Millisecond * 60)
 	require.True(t, fired.Get())
 	require.False(t, res.Get())
 }
@@ -79,7 +80,7 @@ func TestWaiterWithContext(t *testing.T) {
 		fired.Set(true)
 	}(res)
 
-	time.Sleep(time.Millisecond*40)
+	time.Sleep(time.Millisecond * 40)
 	require.True(t, fired.Get())
 	require.False(t, res.Get())
 }
