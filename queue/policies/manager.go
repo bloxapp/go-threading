@@ -2,18 +2,16 @@ package policies
 
 type PolicyManager interface {
 	Evacuate() bool
-	Item() interface{}
+	AddPolicy(policy Policy)
 }
 
 // policyManager holds several policies and an item
 type policyManager struct {
 	policies []Policy
-	item     interface{}
 }
 
-func NewPolicyManager(item interface{}, policies []Policy) PolicyManager {
+func NewPolicyManager(policies []Policy) PolicyManager {
 	return &policyManager{
-		item:     item,
 		policies: policies,
 	}
 }
@@ -27,6 +25,6 @@ func (m *policyManager) Evacuate() bool {
 	return false
 }
 
-func (m *policyManager) Item() interface{} {
-	return m.item
+func (m *policyManager) AddPolicy(policy Policy) {
+	m.policies = append(m.policies, policy)
 }

@@ -23,7 +23,3 @@ func NewTimePolicy(d time.Duration) Policy {
 func (tp *TimePolicy) Evacuate() bool {
 	return time.Now().After(tp.t)
 }
-
-func (tp *TimePolicy) Item() interface{} {
-	return nil
-}
