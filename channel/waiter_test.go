@@ -3,11 +3,59 @@ package channel
 import (
 	"context"
 	"go-threading/threadsafe"
+	"sync"
 	"testing"
 	"time"
 
+	"go.uber.org/goleak"
+
 	"github.com/stretchr/testify/require"
 )
+
+func TestWaiterLeaks(t *testing.T) {
+	t.Run("no waiting called", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			w := NewWaiter()
+			go func(w *Waiter) {
+				time.Sleep(time.Millisecond * 25)
+				w.Fire("test")
+				wg.Done()
+			}(w)
+		}
+		wg.Wait()
+		goleak.VerifyNone(t)
+	})
+
+	t.Run("wait called", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			w := NewWaiter()
+			go func(w *Waiter) {
+				time.Sleep(time.Millisecond * 25)
+				w.Fire("test")
+			}(w)
+			w.Wait()
+			wg.Done()
+		}
+		wg.Wait()
+		goleak.VerifyNone(t)
+	})
+
+	t.Run("wait with timeout", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			w := NewWaiter()
+			w.WaitWithTimeout(time.Millisecond * 10)
+			wg.Done()
+		}
+		wg.Wait()
+		goleak.VerifyNone(t)
+	})
+}
 
 func TestWaiterNormal(t *testing.T) {
 	w := NewWaiter()

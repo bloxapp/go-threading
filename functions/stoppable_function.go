@@ -30,6 +30,7 @@ func NewStoppableF(fn FuncWithStop) *StoppableFunc {
 	}
 }
 
+// Start will start the function and wait for it to complete or cancel
 func (s *StoppableFunc) Start() *FuncResult {
 	w := s.Result.Register()
 	go func() {

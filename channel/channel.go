@@ -40,11 +40,17 @@ func (c *Channel) DeRegister(waiter *Waiter) {
 	}
 }
 
+func (c *Channel) DeRegisterAll() {
+	c.lock.Lock()
+	defer c.lock.Unlock()
+
+	c.registers = make(map[string]*Waiter)
+}
+
 // FireToAll will fire the object thorough the waiters if not cancelled
 func (c *Channel) FireToAll(obj interface{}) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
-
 	for _, w := range c.registers {
 		w.Fire(obj)
 	}

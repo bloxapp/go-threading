@@ -3,11 +3,45 @@ package channel
 import (
 	"fmt"
 	"go-threading/threadsafe"
+	"sync"
 	"testing"
 	"time"
 
+	"go.uber.org/goleak"
+
 	"github.com/stretchr/testify/require"
 )
+
+func TestChannelLeaks(t *testing.T) {
+	t.Run("wait and fire", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			c := New()
+			go func(c *Channel) {
+				c.FireToAll("test")
+			}(c)
+			c.Register().Wait()
+			wg.Done()
+		}
+
+		wg.Wait()
+		goleak.VerifyNone(t)
+	})
+
+	t.Run("wait with timeout, don't fire", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			c := New()
+			c.Register().WaitWithTimeout(time.Millisecond * 10)
+			wg.Done()
+		}
+
+		wg.Wait()
+		goleak.VerifyNone(t)
+	})
+}
 
 func TestChannel_RegisterAndFire(t *testing.T) {
 	c := New()
