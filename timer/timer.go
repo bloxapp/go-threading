@@ -1,16 +1,20 @@
 package timer
 
 import (
+	"go-threading/channel"
 	"sync"
 	"time"
 )
 
+const (
+	waiterTimout = time.Millisecond * 50
+)
+
 // RoundTimer is a wrapper around timer to fit the use in an iBFT instance
 type RoundTimer struct {
-	timer   *time.Timer
-	lapsedC chan bool
-	resC    chan bool
-	killC   chan bool
+	timer     *time.Timer
+	internalC *channel.Channel // internalC triggers when lapsed or cancelled
+	resC      *channel.Channel
 
 	stopped  bool
 	syncLock sync.RWMutex
@@ -18,46 +22,21 @@ type RoundTimer struct {
 
 // New returns a new instance of RoundTimer
 func New() *RoundTimer {
-	ret := &RoundTimer{
-		timer:    nil,
-		lapsedC:  make(chan bool),
-		killC:    make(chan bool),
-		stopped:  true,
-		syncLock: sync.RWMutex{},
+	return &RoundTimer{
+		timer:     nil,
+		internalC: channel.New(),
+		resC:      channel.New(),
+		stopped:   true,
+		syncLock:  sync.RWMutex{},
 	}
-	go ret.eventLoop()
-	return ret
 }
 
 // ResultChan returns the result chan
 // true if the timer lapsed or false if it was stopped
-func (t *RoundTimer) ResultChan() chan bool {
+func (t *RoundTimer) ResultChan() *channel.Waiter {
 	t.syncLock.Lock()
 	defer t.syncLock.Unlock()
-
-	if t.resC == nil {
-		t.resC = make(chan bool)
-	}
-	return t.resC
-}
-
-// CloseChan closes the results chan
-func (t *RoundTimer) CloseChan() {
-	t.syncLock.Lock()
-	defer t.syncLock.Unlock()
-	if t.resC != nil {
-		close(t.resC)
-		t.resC = nil
-	}
-}
-
-func (t *RoundTimer) fireChannelEvent(value bool) {
-	t.syncLock.RLock()
-	defer t.syncLock.RUnlock()
-
-	if t.resC != nil {
-		t.resC <- value
-	}
+	return t.resC.Register()
 }
 
 // Reset will return a channel that sends true if the timer lapsed or false if it was cancelled
@@ -69,11 +48,14 @@ func (t *RoundTimer) Reset(d time.Duration) {
 	t.stopped = false
 
 	if t.timer != nil {
+		go t.eventLoop()
 		t.timer.Stop()
 		t.timer.Reset(d)
 	} else {
+		go t.eventLoop()
 		t.timer = time.AfterFunc(d, func() {
-			t.lapsedC <- true
+			t.internalC.FireToAll(true)
+			t.stopEventLoop()
 		})
 	}
 }
@@ -92,24 +74,33 @@ func (t *RoundTimer) Kill() {
 	if t.timer != nil {
 		t.timer.Stop()
 	}
-	t.stopped = true
-	t.killC <- true
+	t.stopEventLoop()
 
 	t.syncLock.Unlock()
 
-	go t.fireChannelEvent(false)
+	t.fireChannelEvent(false)
+}
+
+func (t *RoundTimer) fireChannelEvent(value bool) {
+	t.syncLock.RLock()
+	defer t.syncLock.RUnlock()
+
+	t.resC.FireToAll(value)
+}
+
+func (t *RoundTimer) stopEventLoop() {
+	t.stopped = true
+	t.internalC.FireToAll(false)
 }
 
 func (t *RoundTimer) eventLoop() {
+	waiter := t.internalC.Register()
 loop:
 	for {
-		select {
-		case <-t.lapsedC:
-			t.syncLock.Lock()
-			t.stopped = true
-			t.syncLock.Unlock()
-			go t.fireChannelEvent(true)
-		case <-t.killC:
+		res := waiter.Wait()
+		if res.(bool) { // lapsed
+			t.fireChannelEvent(true)
+		} else { // killed
 			break loop
 		}
 	}

@@ -1,6 +1,7 @@
 package functions
 
 import (
+	"go-threading/timer"
 	"time"
 )
 
@@ -8,11 +9,14 @@ import (
 func NewTimeoutF(fn FuncWithStop, t time.Duration) *FuncResult {
 	sf := NewStoppableF(fn)
 
-	go func() {
-		<-time.After(t)
+	tmr := timer.New()
+	go func(tmr *timer.RoundTimer) {
+		tmr.ResultChan().Wait()
 		sf.Manager.Stop()
-	}()
+	}(tmr)
+	tmr.Reset(t)
 
 	res := sf.Start()
+	tmr.Kill()
 	return res
 }
