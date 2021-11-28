@@ -4,8 +4,11 @@ import (
 	"fmt"
 	policies2 "go-threading/queue/policies"
 	"go-threading/threadsafe"
+	"sync"
 	"testing"
 	"time"
+
+	"go.uber.org/goleak"
 
 	"github.com/stretchr/testify/require"
 )
@@ -157,5 +160,26 @@ func TestAddStateful(t *testing.T) {
 		time.Sleep(time.Millisecond * 25)
 		require.EqualValues(t, ItemCancelled, called.Get())
 		require.EqualValues(t, 0, q.Len())
+	})
+}
+
+func TestLeaks(t *testing.T) {
+	t.Run("pop wait", func(t *testing.T) {
+		wg := sync.WaitGroup{}
+		for i := 0; i < 50; i++ {
+			wg.Add(1)
+			q := New(FIFO, 3)
+			go func(q Queue) {
+				q.PopWait(DefaultItemIndex).Wait()
+				wg.Done()
+			}(q)
+			go func(q Queue) {
+				time.Sleep(time.Millisecond * 25)
+				q.Add("test", "")
+			}(q)
+		}
+
+		wg.Wait()
+		goleak.VerifyNone(t)
 	})
 }
