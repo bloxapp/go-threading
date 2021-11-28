@@ -36,7 +36,7 @@ func TestLeaks(t *testing.T) {
 				timer.ResultChan().Wait()
 				wg.Done()
 			}(timer)
-			timer.Reset(time.Millisecond * 50)
+			timer.Reset(time.Millisecond * 150)
 			time.AfterFunc(time.Millisecond*10, func() {
 				timer.Reset(time.Millisecond * 15)
 			})

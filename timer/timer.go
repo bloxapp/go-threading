@@ -48,13 +48,17 @@ func (t *RoundTimer) Reset(d time.Duration) {
 	t.stopped = false
 
 	if t.timer != nil {
-		go t.eventLoop()
+		// timer is already running, reset it.
 		t.timer.Stop()
 		t.timer.Reset(d)
 	} else {
+		// no running timer, create a new one
 		go t.eventLoop()
 		t.timer = time.AfterFunc(d, func() {
+			t.syncLock.Lock()
+			defer t.syncLock.Unlock()
 			t.internalC.FireToAll(true)
+			t.timer = nil
 			t.stopEventLoop()
 		})
 	}
