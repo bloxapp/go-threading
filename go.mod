@@ -1,4 +1,4 @@
-module go-threading
+module github.com/bloxapp/go-threading
 
 go 1.15
 
