@@ -1,8 +1,8 @@
 package queue
 
 import (
-	"go-threading/channel"
-	policies2 "go-threading/queue/policies"
+	"github.com/bloxapp/go-threading/channel"
+	"github.com/bloxapp/go-threading/queue/policies"
 )
 
 type ItemState int
@@ -14,7 +14,7 @@ const (
 
 type Item interface {
 	statefullItem
-	PolicyManager() policies2.PolicyManager
+	PolicyManager() policies.PolicyManager
 	Item() interface{}
 	// Waiter will fire if the item was popped or cancelled
 	Waiter() *channel.Waiter
@@ -28,10 +28,10 @@ type statefullItem interface {
 type item struct {
 	item    interface{}
 	waiter  *channel.Waiter
-	manager policies2.PolicyManager
+	manager policies.PolicyManager
 }
 
-func NewItem(i interface{}, policyManager policies2.PolicyManager) Item {
+func NewItem(i interface{}, policyManager policies.PolicyManager) Item {
 	return &item{
 		item:    i,
 		manager: policyManager,
@@ -39,7 +39,7 @@ func NewItem(i interface{}, policyManager policies2.PolicyManager) Item {
 	}
 }
 
-func (i *item) PolicyManager() policies2.PolicyManager {
+func (i *item) PolicyManager() policies.PolicyManager {
 	return i.manager
 }
 

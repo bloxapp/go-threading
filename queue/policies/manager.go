@@ -10,6 +10,7 @@ type policyManager struct {
 	policies []Policy
 }
 
+// NewPolicyManager returns a policy manager instance
 func NewPolicyManager(policies []Policy) PolicyManager {
 	return &policyManager{
 		policies: policies,

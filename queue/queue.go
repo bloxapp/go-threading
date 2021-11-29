@@ -1,10 +1,12 @@
 package queue
 
 import (
-	"go-threading/channel"
-	policies2 "go-threading/queue/policies"
 	"sync"
 	"time"
+
+	"github.com/bloxapp/go-threading/queue/policies"
+
+	"github.com/bloxapp/go-threading/channel"
 )
 
 const (
@@ -47,7 +49,7 @@ const (
 type queue struct {
 	stop      bool
 	queue     map[Index][]Item
-	policies  []policies2.ApplyPolicy
+	policies  []policies.ApplyPolicy
 	lock      sync.RWMutex
 	capacity  int
 	direction Direction
@@ -55,7 +57,7 @@ type queue struct {
 }
 
 // New returns a new instance of funcQueue
-func New(direction Direction, capacity int, policies ...policies2.ApplyPolicy) Queue {
+func New(direction Direction, capacity int, policies ...policies.ApplyPolicy) Queue {
 	q := queue{
 		queue:     make(map[Index][]Item),
 		lock:      sync.RWMutex{},
@@ -151,7 +153,7 @@ func (q *queue) CancelAndClose(index Index) {
 	indexedQ := q.queue[index]
 	for _, i := range indexedQ {
 		i.Cancelled()
-		i.PolicyManager().AddPolicy(policies2.NewCancelledPolicy())
+		i.PolicyManager().AddPolicy(policies.NewCancelledPolicy())
 	}
 
 	// evict
@@ -213,13 +215,13 @@ func (q *queue) add(e interface{}, index Index) (bool, Item) {
 	}
 
 	// set policies
-	policies := make([]policies2.Policy, 0)
+	newPolicies := make([]policies.Policy, 0)
 	for _, p := range q.policies {
-		policies = append(policies, p())
+		newPolicies = append(newPolicies, p())
 	}
 
 	// generate item
-	i := NewItem(e, policies2.NewPolicyManager(policies))
+	i := NewItem(e, policies.NewPolicyManager(newPolicies))
 
 	if q.queue[index] == nil {
 		q.queue[index] = make([]Item, 0)

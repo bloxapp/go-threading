@@ -1,8 +1,9 @@
 package functions
 
 import (
-	"go-threading/timer"
 	"time"
+
+	"github.com/bloxapp/go-threading/timer"
 )
 
 // NewTimeoutF will run a provided function in a new go routine for the provided timeout, after which it will be cancelled.

@@ -2,10 +2,11 @@ package channel
 
 import (
 	"context"
-	"go-threading/threadsafe"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bloxapp/go-threading/threadsafe"
 
 	"go.uber.org/goleak"
 

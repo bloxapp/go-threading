@@ -1,9 +1,10 @@
 package queue
 
 import (
-	"go-threading/queue/policies"
 	"testing"
 	"time"
+
+	"github.com/bloxapp/go-threading/queue/policies"
 
 	"github.com/stretchr/testify/require"
 )

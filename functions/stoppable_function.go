@@ -1,8 +1,7 @@
 package functions
 
 import (
-	"go-threading/channel"
-
+	"github.com/bloxapp/go-threading/channel"
 	"github.com/pkg/errors"
 )
 

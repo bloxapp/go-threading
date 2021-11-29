@@ -2,19 +2,20 @@ package queue
 
 import (
 	"fmt"
-	policies2 "go-threading/queue/policies"
-	"go-threading/threadsafe"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/bloxapp/go-threading/queue/policies"
+	"github.com/bloxapp/go-threading/threadsafe"
 
 	"go.uber.org/goleak"
 
 	"github.com/stretchr/testify/require"
 )
 
-var evictImmediatelyF = func(i ...interface{}) func() policies2.Policy {
-	return func() policies2.Policy {
+var evictImmediatelyF = func(i ...interface{}) func() policies.Policy {
+	return func() policies.Policy {
 		return newEvictImmediately()
 	}
 }
@@ -22,7 +23,7 @@ var evictImmediatelyF = func(i ...interface{}) func() policies2.Policy {
 type evictImmediately struct {
 }
 
-func newEvictImmediately() policies2.Policy {
+func newEvictImmediately() policies.Policy {
 	return &evictImmediately{}
 }
 

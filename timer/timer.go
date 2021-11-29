@@ -1,9 +1,10 @@
 package timer
 
 import (
-	"go-threading/channel"
 	"sync"
 	"time"
+
+	"github.com/bloxapp/go-threading/channel"
 )
 
 const (

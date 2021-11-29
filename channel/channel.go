@@ -1,8 +1,9 @@
 package channel
 
 import (
-	"go-threading/threadsafe"
 	"sync"
+
+	"github.com/bloxapp/go-threading/threadsafe"
 )
 
 const ChannelClosed = "channel_closed"
